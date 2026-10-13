@@ -89,8 +89,9 @@ or from `/data/onvif.yaml` before reinstalling.
    your UniFi client list with MAC prefix `1A:11:B0`.
 2. In Protect, the cameras should be discovered automatically (WS-Discovery).
    If not, add them manually by IP with the ONVIF port (default `8081`).
-   Third-party ONVIF cameras in Protect don't require credentials from this
-   proxy; if prompted, any username/password works.
+   If the RTSP source requires authentication, enter its username/password in
+   Protect. The ONVIF endpoint does not validate credentials, but the TCP proxy
+   forwards RTSP authentication to the source.
 
 ## Troubleshooting
 

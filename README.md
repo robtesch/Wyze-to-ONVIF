@@ -106,7 +106,7 @@ For a camera to remain the *same device* in Protect across a reinstall, also pin
 ## Adopting in UniFi Protect
 
 1. Start the app and open its **Log**. For each camera you should see the interface created, a DHCP lease, and `SERVER: <name> — HTTP listening on <ip>:8081`. The virtual cameras appear on your network with MAC prefix `1A:11:B0`.
-2. In Protect, the cameras are usually discovered automatically. If not, use **Protect → Devices → Can't find your device? → advanced adoption** and enter the camera's virtual IP with ONVIF port `8081`. Third-party cameras don't need credentials from this proxy — if prompted, any username/password works.
+2. In Protect, the cameras are usually discovered automatically. If not, use **Protect → Devices → Can't find your device? → advanced adoption** and enter the camera's virtual IP with ONVIF port `8081`. If the RTSP source requires authentication, enter that source's username/password in Protect. The ONVIF endpoint itself does not validate credentials, but the TCP proxy forwards the source's RTSP authentication challenge.
 
 ## Troubleshooting
 
@@ -121,6 +121,20 @@ For a camera to remain the *same device* in Protect across a reinstall, also pin
 - Streams must be **H.264** (wyze-bridge's default).
 - PTZ, two-way audio, and smart detections are not available for third-party ONVIF cameras in Protect. Snapshots and timeline scrubbing depend on upstream and can be inconsistent.
 - Uninstalling the app clears its `/data`, so the generated MACs are lost and Protect will see new devices on reinstall.
+
+## Development and compatibility tests
+
+With Node.js 20 or later, run `npm test` from the repository root. The tests fetch
+and cache the pinned upstream ONVIF server, verify its SHA-256 hash, and exercise
+its SOAP request handler over a local HTTP endpoint. They cover the previously
+unsupported network-interface and encoder-options requests, DHCP/static network
+reporting, profile selection, and debug-log handling of authentication tokens.
+
+The image build applies `rtsp_to_onvif/patch-onvif-server.cjs` to that pinned
+server. Updating the upstream commit also requires reviewing this patch and
+updating the expected source hash. The tests verify the protocol responses;
+successful adoption and stable video still need validation with the actual
+camera and Protect version.
 
 ## Credits
 
