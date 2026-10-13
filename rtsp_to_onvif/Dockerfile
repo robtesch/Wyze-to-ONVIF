@@ -19,6 +19,12 @@ RUN apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/
 ENV NODE_ENV=production
 WORKDIR /app
 
+# Optional copy-only restream, pinned and verified for all supported arches.
+RUN apk add --no-cache ffmpeg
+COPY install-go2rtc.sh /tmp/install-go2rtc.sh
+RUN sh /tmp/install-go2rtc.sh && rm /tmp/install-go2rtc.sh
+COPY licenses/go2rtc-MIT.txt /usr/share/licenses/go2rtc/LICENSE
+
 # dlo747/RTSP-to-ONVIF-Unifi-Protect, pinned to main as of 2026-07-09
 ARG UPSTREAM_SHA=fcdbcf9f624bd00c874bc00b6b5a07a77ec4f536
 RUN wget -qO /tmp/upstream.tar.gz "https://github.com/dlo747/RTSP-to-ONVIF-Unifi-Protect/archive/${UPSTREAM_SHA}.tar.gz" \
@@ -43,6 +49,7 @@ RUN node /tmp/patch-proxy-debug.cjs /app/main.js \
 RUN npm ci --omit=dev --silent
 
 COPY ha-config.js /ha-config.js
+COPY restream-config.cjs service-runner.cjs /
 COPY run.sh /run.sh
 RUN chmod +x /run.sh
 

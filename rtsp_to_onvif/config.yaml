@@ -1,5 +1,5 @@
 name: RTSP to ONVIF for UniFi Protect
-version: "1.0.4"
+version: "1.1.0"
 slug: rtsp_to_onvif
 # The build base is HA's s6-overlay image; s6 must run as PID 1, so disable
 # Supervisor's default docker --init (tini).
@@ -28,12 +28,16 @@ options:
 schema:
   interface: str
   debug: bool
+  restream_port: port?
   cameras:
     - name: "match(^[A-Za-z][A-Za-z0-9]*$)"
       target_host: str
       target_rtsp_port: port?
       target_snapshot_port: port?
       rtsp_path: str
+      restream: bool?
+      rtsp_username: str?
+      rtsp_password: password?
       snapshot_path: str?
       width: int
       height: int

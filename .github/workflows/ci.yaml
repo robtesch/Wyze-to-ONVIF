@@ -38,3 +38,8 @@ jobs:
           docker run --rm --network none --entrypoint node
           -v "$PWD:/checks:ro" onvif-compat-test
           /checks/tests/image-rtsp-smoke.cjs
+      - name: Test copy-only restream and service lifecycle in the image
+        run: >-
+          docker run --rm --network none --entrypoint node
+          -v "$PWD:/checks:ro" onvif-compat-test
+          /checks/tests/image-restream-smoke.cjs

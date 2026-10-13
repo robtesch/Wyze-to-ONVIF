@@ -21,6 +21,8 @@ Each camera you configure becomes its own virtual ONVIF device — a macvlan net
 - Exposes any RTSP stream as a UniFi-adoptable ONVIF camera
 - One virtual camera per source stream, each with a stable MAC/IP that survives restarts
 - Designed around docker-wyze-bridge, but source-agnostic
+- Optional bundled copy-only restream for legacy sources, using go2rtc/FFmpeg
+  inside the same app; see [restream setup and migration](rtsp_to_onvif/DOCS.md#bundled-copy-only-restream)
 - Automatically prevents the macvlan "IP conflict" that UniFi would otherwise flag (see [Troubleshooting](#troubleshooting))
 - Runs entirely on your LAN — no cloud, no external dependencies
 
@@ -51,6 +53,7 @@ Each camera you configure becomes its own virtual ONVIF device — a macvlan net
 |---|---|---|
 | `interface` | yes | The Home Assistant host's Ethernet interface to attach the virtual cameras to (e.g. `eth0`, `end0`). The camera IPs come from this interface's subnet via DHCP. If you're unsure of the name, start the app once — the log lists the available interfaces. |
 | `debug` | no | Verbose ONVIF-server logging. Default `false`. |
+| `restream_port` | no | Bundled restream's loopback-only RTSP port. Default `19854`. |
 | `cameras` | yes | List of virtual cameras (see below). |
 
 ### Per-camera options
@@ -60,6 +63,8 @@ Each camera you configure becomes its own virtual ONVIF device — a macvlan net
 | `name` | yes | Letters and digits only, must start with a letter. Shown in Protect. Changing it later regenerates the camera's MAC, so Protect sees a brand-new device. |
 | `target_host` | yes | IP or hostname of the RTSP source (your wyze-bridge host). |
 | `rtsp_path` | yes | Stream path on the source, e.g. `/front-door` for a wyze-bridge camera named `front-door`. |
+| `restream` | no | Default false. Copy video/audio through bundled go2rtc/FFmpeg without transcoding; avoids needing a separate restream app. |
+| `rtsp_username` / `rtsp_password` | no | Original source credentials when `restream: true`. Enter plain values; stored locally and redacted from service logs. |
 | `width`, `height`, `framerate`, `bitrate` | yes | Must match what the source stream actually delivers (bitrate in kb/s). Protect advertises these as the camera's capabilities. |
 | `ip` | no | A **static IP** for this camera's virtual interface, e.g. `192.168.40.247`. Must be on the same subnet as Home Assistant and free (ideally outside your DHCP pool). Omit to use DHCP. **Recommended** — see [Static IPs](#static-ips-recommended). |
 | `target_rtsp_port` | no | RTSP port of the source. Default `8554` (wyze-bridge default). |
@@ -146,6 +151,7 @@ camera and Protect version.
 
 - [dlo747/RTSP-to-ONVIF-Unifi-Protect](https://github.com/dlo747/RTSP-to-ONVIF-Unifi-Protect) — the ONVIF server this app wraps.
 - [docker-wyze-bridge](https://github.com/mrlt8/docker-wyze-bridge) — the usual RTSP source.
+- [AlexxIT/go2rtc](https://github.com/AlexxIT/go2rtc) and [FFmpeg](https://ffmpeg.org/) — optional copy-only restream; go2rtc's MIT notice is included in the image.
 
 ## License
 

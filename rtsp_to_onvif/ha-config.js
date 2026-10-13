@@ -13,12 +13,14 @@ const fs = require('fs');
 const os = require('os');
 const { execSync } = require('child_process');
 const YAML = require('/app/node_modules/yaml');
+const {DEFAULT_PORT, restreamConfig} = require('./restream-config.cjs');
 
 const OPTIONS_FILE = '/data/options.json';
 const CONFIG_FILE = '/data/onvif.yaml';
 
 const options = JSON.parse(fs.readFileSync(OPTIONS_FILE, 'utf8'));
 const cameras = options.cameras || [];
+const restream = restreamConfig(options);
 
 const interfaces = os.networkInterfaces();
 if (!interfaces[options.interface]) {
@@ -66,12 +68,12 @@ const config = {
             target: {
                 hostname: cam.target_host,
                 ports: {
-                    rtsp: cam.target_rtsp_port || 8554,
+                    rtsp: cam.restream ? (options.restream_port || DEFAULT_PORT) : (cam.target_rtsp_port || 8554),
                     snapshot: cam.target_snapshot_port || 5000,
                 },
             },
             highQuality: {
-                rtsp: cam.rtsp_path,
+                rtsp: cam.restream ? `/${cam.name}` : cam.rtsp_path,
                 // An explicit empty path selects upstream's built-in placeholder.
                 snapshot: cam.snapshot_path ?? `/snapshot/${cam.name}.jpg`,
                 width: cam.width,
@@ -92,6 +94,9 @@ const config = {
             },
         };
 
+        // Snapshots still target the original camera; only RTSP is restreamed.
+        if (cam.restream) entry.target.rtspHostname = '127.0.0.1';
+
         // Optional static IP for this camera's virtual interface. Accepts a
         // plain address (prefix added from the host subnet) or a full CIDR.
         // When omitted, the interface uses DHCP.
@@ -108,4 +113,11 @@ const config = {
 };
 
 fs.writeFileSync(CONFIG_FILE, YAML.stringify(config), 'utf8');
+const RESTREAM_FILE = '/data/restream.yaml';
+if (restream) {
+    fs.writeFileSync(RESTREAM_FILE, YAML.stringify(restream), {encoding: 'utf8', mode: 0o600});
+    fs.chmodSync(RESTREAM_FILE, 0o600);
+} else if (fs.existsSync(RESTREAM_FILE)) {
+    fs.unlinkSync(RESTREAM_FILE);
+}
 console.log(`[ha-config] Wrote ${CONFIG_FILE} with ${config.onvif.length} camera(s)`);

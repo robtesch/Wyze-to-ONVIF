@@ -8,6 +8,8 @@ function patchSource(source) {
   return source
     .replace("const tcpProxy = require('node-tcp-proxy');", "const tcpProxy = require('node-tcp-proxy');\nconst { debugProxyOptions } = require('./rtsp-debug.cjs');")
     .replace('    let proxies = {};', '    let proxies = {};\n    const rtspPorts = new Set(config.onvif.map(camera => String(camera.ports.rtsp)));')
+    .replace('            if (onvifConfig.ports.rtsp && onvifConfig.target.ports.rtsp)\n                proxies[onvifConfig.target.hostname][onvifConfig.ports.rtsp] = onvifConfig.target.ports.rtsp;',
+      '            const rtspHost = onvifConfig.target.rtspHostname || onvifConfig.target.hostname;\n            if (!proxies[rtspHost]) proxies[rtspHost] = {};\n            if (onvifConfig.ports.rtsp && onvifConfig.target.ports.rtsp)\n                proxies[rtspHost][onvifConfig.ports.rtsp] = onvifConfig.target.ports.rtsp;')
     .replace('tcpProxy.createProxy(sourcePort, destinationAddress, proxies[destinationAddress][sourcePort]);', 'tcpProxy.createProxy(sourcePort, destinationAddress, proxies[destinationAddress][sourcePort],\n                process.env.DEBUG && rtspPorts.has(String(sourcePort)) ? debugProxyOptions(logger, sourcePort) : undefined);');
 }
 
