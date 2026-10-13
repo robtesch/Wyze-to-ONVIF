@@ -64,7 +64,7 @@ Each camera you configure becomes its own virtual ONVIF device — a macvlan net
 | `ip` | no | A **static IP** for this camera's virtual interface, e.g. `192.168.40.247`. Must be on the same subnet as Home Assistant and free (ideally outside your DHCP pool). Omit to use DHCP. **Recommended** — see [Static IPs](#static-ips-recommended). |
 | `target_rtsp_port` | no | RTSP port of the source. Default `8554` (wyze-bridge default). |
 | `target_snapshot_port` | no | HTTP port of the source for snapshots. Default `5000`. |
-| `snapshot_path` | no | Snapshot path on the source. Defaults to `/snapshot/<name>.jpg`. |
+| `snapshot_path` | no | Snapshot path on the source. Defaults to `/snapshot/<name>.jpg`. Set to `""` to use the bridge's built-in placeholder image when the source has no HTTP snapshot endpoint. |
 | `server_port` | no | ONVIF HTTP port on the camera's virtual IP. Default `8081`; safe to share across cameras. |
 | `rtsp_proxy_port` / `snapshot_proxy_port` | no | Local proxy ports, auto-assigned uniquely per camera (`19554+n` / `18080+n`). Only set these to resolve a port conflict. |
 | `mac` / `uuid` | no | Auto-generated on first start and persisted. Only set to pin specific values. |
@@ -104,6 +104,12 @@ Setting a fixed **`ip`** per camera avoids this — static IPs are reproducible 
 For a camera to remain the *same device* in Protect across a reinstall, also pin its **`mac`** (Protect identifies third-party cameras by MAC). Setting both `ip` and `mac` makes a camera fully reproducible — re-entering the same config restores the exact same device. Grab the generated MAC from the app log or `/data/onvif.yaml` before reinstalling.
 
 ## Adopting in UniFi Protect
+
+For sources that provide RTSP video but no HTTP snapshot endpoint, add
+`snapshot_path: ""` to the camera configuration. Keep the quotes: an omitted or
+null value uses the existing default path. Protect will receive the bridge's
+static placeholder image for snapshot requests; live video still uses the same
+RTSP stream. This setting does not generate snapshots from the video.
 
 1. Start the app and open its **Log**. For each camera you should see the interface created, a DHCP lease, and `SERVER: <name> — HTTP listening on <ip>:8081`. The virtual cameras appear on your network with MAC prefix `1A:11:B0`.
 2. In Protect, the cameras are usually discovered automatically. If not, use **Protect → Devices → Can't find your device? → advanced adoption** and enter the camera's virtual IP with ONVIF port `8081`. If the RTSP source requires authentication, enter that source's username/password in Protect. The ONVIF endpoint itself does not validate credentials, but the TCP proxy forwards the source's RTSP authentication challenge.

@@ -28,3 +28,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build -t onvif-compat-test rtsp_to_onvif
+      - name: Test built-in snapshot in the image
+        run: >-
+          docker run --rm --network none --entrypoint node
+          -v "$PWD:/checks:ro" onvif-compat-test
+          /checks/tests/image-snapshot-smoke.cjs
