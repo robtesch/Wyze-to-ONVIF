@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0
+
+- Add optional bundled go2rtc/FFmpeg copy-only restreams for legacy RTSP sources,
+  so Protect integration can run in one HA app without transcoding video/audio.
+- Preserve camera identities and original snapshot routing when restreaming.
+- Supervise both services and their FFmpeg children together; redact source
+  credentials from child-process logs and keep generated credentials private.
+- Verify real H.264/PCMU playback, copied frames and clean shutdown in image CI.
+
 ## 1.0.4
 
 - When debug mode is enabled, log RTSP methods, response status codes, transport,

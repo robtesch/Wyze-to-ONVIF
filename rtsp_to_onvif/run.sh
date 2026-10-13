@@ -59,4 +59,7 @@ if [ "$(node -p "!!require('/data/options.json').debug")" = "true" ]; then
 fi
 
 cd /app
+if [ "$(node -p "(require('/data/options.json').cameras || []).some(camera => camera.restream)")" = "true" ]; then
+    exec node /service-runner.cjs
+fi
 exec node main.js /data/onvif.yaml

@@ -21,6 +21,7 @@ adoptable by UniFi Protect as a third-party camera.
 |---|---|
 | `interface` | Host network interface to attach virtual camera interfaces to. On a Raspberry Pi this is usually `eth0` or `end0` — if you guess wrong, the app log lists the available names at startup. |
 | `debug` | ONVIF action and redacted RTSP negotiation logging. Includes request/status codes, TCP/UDP transport, codec/profile summaries and connection/media counts; omits credentials, complete URLs and media payloads. |
+| `restream_port` | Internal loopback-only RTSP port when any camera enables `restream`. Default `19854`; change it if another app already uses that port. |
 | `cameras` | List of virtual cameras, see below. |
 
 Per camera:
@@ -32,6 +33,8 @@ Per camera:
 | `target_rtsp_port` | no | RTSP port of the source. Default `8554` (wyze-bridge default). |
 | `target_snapshot_port` | no | HTTP port of the source for snapshots. Default `5000` (wyze-bridge Web-UI). |
 | `rtsp_path` | yes | Stream path on the source, e.g. `/front-door` for wyze-bridge camera `front-door`. |
+| `restream` | no | Default false. Rebuild RTSP/SDP/RTP through bundled go2rtc 1.9.14 and FFmpeg, copying video and audio without transcoding. Useful for legacy streams that play elsewhere but disconnect in Protect. |
+| `rtsp_username` / `rtsp_password` | no | Source credentials for `restream: true`. Enter plain values; the app URL-encodes them. Stored in app Configuration and a mode-0600 generated file, and redacted from service logs. Omit for an unauthenticated source. Ignored in passthrough mode. |
 | `snapshot_path` | no | Snapshot path on the source. Defaults to `/snapshot/<name>.jpg`. Set to `""` to use the bridge's built-in placeholder image when the source has no HTTP snapshot endpoint. |
 | `width`, `height`, `framerate`, `bitrate` | yes | Must match what the source stream actually delivers (bitrate in kb/s). Protect uses these as the advertised stream capabilities. |
 | `ip` | no | A **static IP** for this camera's virtual interface, e.g. `192.168.40.247`. Must be on the same subnet as Home Assistant and free (ideally outside your DHCP pool). Omit to let DHCP assign one. Recommended — see [Static vs. DHCP](#static-vs-dhcp-recommended). |
@@ -62,6 +65,57 @@ cameras:
     bitrate: 2048
     ip: 192.168.1.248
 ```
+
+### Bundled copy-only restream
+
+Enable `restream: true` on a camera to run the known copy-only workaround inside
+this app. Point `target_host`, `target_rtsp_port` and `rtsp_path` at the **original
+camera**, and add its RTSP credentials:
+
+```yaml
+interface: end0
+debug: false
+cameras:
+  - name: GateIntercom
+    target_host: 192.168.1.52
+    target_rtsp_port: 554
+    rtsp_path: /Streaming/Channels/101
+    restream: true
+    rtsp_username: admin
+    rtsp_password: "YOUR_CAMERA_PASSWORD"
+    snapshot_path: ""
+    width: 1280
+    height: 720
+    framerate: 25
+    bitrate: 2048
+```
+
+The app supervises go2rtc, the ONVIF bridge and FFmpeg together. FFmpeg starts
+on demand and copies both encoded tracks (`video=copy`, `audio=copy`); it does
+not resize, change frame rate or re-encode. Only cameras opting in use it.
+The internal restream listens on loopback, with its HTTP/WebRTC listeners
+disabled. Public RTSP and ONVIF ports stay the same, and snapshot requests
+still target the original camera. The public RTSP proxy for a restreamed
+camera uses the internal unauthenticated stream; Protect's saved credentials
+do not authenticate this endpoint. Source authentication happens inside FFmpeg.
+
+To migrate from a separate go2rtc app:
+
+1. Update this app **in place**, preserving its persistent data. Keep the camera
+   name and any explicit MAC/UUID/IP/port settings.
+2. Configure the original source and credentials as above, save and restart.
+   Keep the separate go2rtc app running during this test: its port 8554 does not
+   conflict with the bundled default 19854.
+3. Confirm Protect has live video and stays online. Stop the separate go2rtc
+   app, then verify playback again before uninstalling it. Check whether any
+   other HA integrations use its streams before removing it.
+4. Turn `debug` off after verification. No camera deletion or re-adoption is
+   needed. You can roll back by disabling `restream` and restoring the old
+   `127.0.0.1:8554` target and stream path while the separate app is running.
+
+This preserves an already-proven restream arrangement inside one HA app. The
+original disconnect's exact cause is not established: incorrect source SDP
+metadata and RTSP/RTP compatibility are both possible contributors.
 
 ### Static vs. DHCP (recommended)
 
