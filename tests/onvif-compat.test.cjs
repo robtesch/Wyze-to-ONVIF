@@ -24,11 +24,11 @@ before(async () => {
   assert.equal(crypto.createHash('sha256').update(original).digest('hex'), SOURCE_HASH);
 });
 
-function makeBridge(source, {staticIp, debug = false} = {}) {
+function makeBridge(source, {staticIp, debug = false, snapshotPath} = {}) {
   const config = {
     name: 'TestCamera', mac: '02:00:00:00:00:42',
     highQuality: {width: 1280, height: 720, framerate: 25, bitrate: 2048, quality: 4,
-      rtsp: '/Streaming/Channels/101'},
+      rtsp: '/Streaming/Channels/101', snapshot: snapshotPath},
     lowQuality: {width: 640, height: 360, framerate: 15, bitrate: 512, quality: 2,
       rtsp: '/Streaming/Channels/102'},
     ports: {server: 8081, rtsp: 19554, snapshot: 18080},
@@ -141,6 +141,16 @@ test('debug output keeps action information and omits authentication tokens', as
     for (const secret of ['test-user', 'synthetic-secret', 'synthetic-nonce', 'UsernameToken']) {
       assert.ok(!logs.some(line => line.includes(secret)));
     }
+  });
+});
+
+test('empty snapshot path advertises the built-in image on the ONVIF server', async () => {
+  await withEndpoint(patchSource(original), {snapshotPath: ''}, async request => {
+    const xml = await request('GetSnapshotUri', {extra: '<ProfileToken>main_stream</ProfileToken>'});
+    assert.ok(xml.includes('<tt:Uri>http://198.51.100.42:8081/snapshot.png</tt:Uri>'));
+    assert.ok(!xml.includes(':18080'));
+    assert.ok(!xml.includes('<s:Fault>'));
+    assert.ok((await request('GetStreamUri')).includes('rtsp://198.51.100.42:19554/Streaming/Channels/101'));
   });
 });
 

@@ -32,7 +32,7 @@ Per camera:
 | `target_rtsp_port` | no | RTSP port of the source. Default `8554` (wyze-bridge default). |
 | `target_snapshot_port` | no | HTTP port of the source for snapshots. Default `5000` (wyze-bridge Web-UI). |
 | `rtsp_path` | yes | Stream path on the source, e.g. `/front-door` for wyze-bridge camera `front-door`. |
-| `snapshot_path` | no | Snapshot path on the source. Defaults to `/snapshot/<name>.jpg`. Snapshots are not fully working upstream yet. |
+| `snapshot_path` | no | Snapshot path on the source. Defaults to `/snapshot/<name>.jpg`. Set to `""` to use the bridge's built-in placeholder image when the source has no HTTP snapshot endpoint. |
 | `width`, `height`, `framerate`, `bitrate` | yes | Must match what the source stream actually delivers (bitrate in kb/s). Protect uses these as the advertised stream capabilities. |
 | `ip` | no | A **static IP** for this camera's virtual interface, e.g. `192.168.40.247`. Must be on the same subnet as Home Assistant and free (ideally outside your DHCP pool). Omit to let DHCP assign one. Recommended — see [Static vs. DHCP](#static-vs-dhcp-recommended). |
 | `server_port` | no | ONVIF HTTP port on the camera's virtual IP. Default `8081`, safe to share between cameras. |

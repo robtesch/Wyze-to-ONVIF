@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.3
+
+- Allow `snapshot_path: ""` for RTSP sources without an HTTP snapshot endpoint.
+  The virtual camera then advertises the bridge's built-in placeholder image.
+
 ## 1.0.2
 
 - Respond to Protect's `GetNetworkInterfaces` and

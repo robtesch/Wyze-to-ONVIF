@@ -72,7 +72,8 @@ const config = {
             },
             highQuality: {
                 rtsp: cam.rtsp_path,
-                snapshot: cam.snapshot_path || `/snapshot/${cam.name}.jpg`,
+                // An explicit empty path selects upstream's built-in placeholder.
+                snapshot: cam.snapshot_path ?? `/snapshot/${cam.name}.jpg`,
                 width: cam.width,
                 height: cam.height,
                 framerate: cam.framerate,
