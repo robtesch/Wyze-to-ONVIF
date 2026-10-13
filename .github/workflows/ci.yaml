@@ -33,3 +33,8 @@ jobs:
           docker run --rm --network none --entrypoint node
           -v "$PWD:/checks:ro" onvif-compat-test
           /checks/tests/image-snapshot-smoke.cjs
+      - name: Test RTSP debug forwarding in the image
+        run: >-
+          docker run --rm --network none --entrypoint node
+          -v "$PWD:/checks:ro" onvif-compat-test
+          /checks/tests/image-rtsp-smoke.cjs

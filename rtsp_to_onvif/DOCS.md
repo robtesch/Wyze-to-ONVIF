@@ -20,7 +20,7 @@ adoptable by UniFi Protect as a third-party camera.
 | Option | Description |
 |---|---|
 | `interface` | Host network interface to attach virtual camera interfaces to. On a Raspberry Pi this is usually `eth0` or `end0` — if you guess wrong, the app log lists the available names at startup. |
-| `debug` | Verbose logging from the ONVIF server. |
+| `debug` | ONVIF action and redacted RTSP negotiation logging. Includes request/status codes, TCP/UDP transport, codec/profile summaries and connection/media counts; omits credentials, complete URLs and media payloads. |
 | `cameras` | List of virtual cameras, see below. |
 
 Per camera:
@@ -94,6 +94,15 @@ or from `/data/onvif.yaml` before reinstalling.
    forwards RTSP authentication to the source.
 
 ## Troubleshooting
+
+- **Adopted but no video / Camera lost power.** Enable `debug: true` and restart.
+  `[RTSP ...]` lines identify the peer and show request/response sequences. A
+  single `401` challenge is normal; repeated `401` responses to authenticated
+  requests suggest an authentication problem. Check the `SETUP` response and
+  transport, then `PLAY` and whether `MEDIA` frames arrive. Media counters cover
+  RTSP-interleaved TCP frames; UDP media does not pass through this TCP proxy.
+  These logs narrow the failure; a successful `PLAY` alone does not establish
+  that Protect can display the video.
 
 - **UniFi VLAN/firewall rules.** If Protect adopts a camera but the stream
   stays black, confirm your firewall policy allows traffic to the **virtual

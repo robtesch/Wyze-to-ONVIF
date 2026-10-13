@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.4
+
+- When debug mode is enabled, log RTSP methods, response status codes, transport,
+  SDP codec/profile summaries, first interleaved media frames, and connection
+  closure counts. Credentials, complete URLs, SDP bodies and media payloads are
+  omitted. The proxy continues to forward the original bytes.
+
 ## 1.0.3
 
 - Allow `snapshot_path: ""` for RTSP sources without an HTTP snapshot endpoint.
