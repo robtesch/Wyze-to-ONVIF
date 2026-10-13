@@ -35,6 +35,11 @@ COPY patch-onvif-server.cjs /tmp/patch-onvif-server.cjs
 RUN node /tmp/patch-onvif-server.cjs /app/src/onvif-server.js \
     && rm /tmp/patch-onvif-server.cjs
 
+COPY rtsp-debug.cjs /app/rtsp-debug.cjs
+COPY patch-proxy-debug.cjs /tmp/patch-proxy-debug.cjs
+RUN node /tmp/patch-proxy-debug.cjs /app/main.js \
+    && rm /tmp/patch-proxy-debug.cjs
+
 RUN npm ci --omit=dev --silent
 
 COPY ha-config.js /ha-config.js
