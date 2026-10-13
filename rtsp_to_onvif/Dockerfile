@@ -29,6 +29,12 @@ RUN wget -qO /tmp/upstream.tar.gz "https://github.com/dlo747/RTSP-to-ONVIF-Unifi
 # (assign a fixed IPv4 instead of DHCP). Re-check it if UPSTREAM_SHA changes.
 COPY config-tools.js /app/src/config-tools.js
 
+# Add the read-only ONVIF operations requested by Protect. The patch checks the
+# pinned source hash and fails the build if upstream changes unexpectedly.
+COPY patch-onvif-server.cjs /tmp/patch-onvif-server.cjs
+RUN node /tmp/patch-onvif-server.cjs /app/src/onvif-server.js \
+    && rm /tmp/patch-onvif-server.cjs
+
 RUN npm ci --omit=dev --silent
 
 COPY ha-config.js /ha-config.js

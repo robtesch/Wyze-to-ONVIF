@@ -1,0 +1,10 @@
+{
+  "name": "rtsp-to-onvif-home-assistant",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.cjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
